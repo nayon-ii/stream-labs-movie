@@ -1,0 +1,10 @@
+.swiper-pagination-bullet {
+  width: 16px;
+  height: 4px;
+  border-radius: 2px;
+  background-color: var(--color-secondary-foreground);
+}
+
+.swiper-pagination-bullet-active {
+background-color: var(--color-primary);
+}
