@@ -17,6 +17,7 @@ export const authApi = createApi({
   }),
   tagTypes: ["Auth"],
   endpoints: (builder) => ({
+    // User Authentication
     login: builder.mutation({
       query: (credentials) => ({
         url: "/sign-in",
@@ -32,7 +33,7 @@ export const authApi = createApi({
             // Store tokens in cookies
             Cookies.set("accessToken", data.access_token, { expires: 365 });
             Cookies.set("refreshToken", data.refresh_token, { expires: 365 });
-            Cookies.set("userRole", data.role, { expires: 365 });
+            Cookies.set("userRole", data.role || "user", { expires: 365 });
             Cookies.set("userId", data.user_id, { expires: 365 });
 
             // Dispatch setCredentials with the correct data structure
@@ -45,6 +46,34 @@ export const authApi = createApi({
       },
     }),
 
+    // Admin Authentication
+    adminLogin: builder.mutation({
+      query: (credentials) => ({
+        url: "/admin-sign-in",
+        method: "POST",
+        body: credentials,
+      }),
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+        try {
+          const { data } = await queryFulfilled;
+
+          // Handle the actual API response structure
+          if (data && data.access_token) {
+            // Store tokens in cookies
+            Cookies.set("accessToken", data.access_token, { expires: 365 });
+            Cookies.set("refreshToken", data.refresh_token, { expires: 365 });
+            Cookies.set("userRole", "admin", { expires: 365 });
+            Cookies.set("userId", data.user_id, { expires: 365 });
+
+            // Dispatch setCredentials with the correct data structure
+            const { setCredentials } = await import("../slices/authSlice");
+            dispatch(setCredentials({ ...data, role: "admin" }));
+          }
+        } catch (error) {
+          console.error("Admin login error:", error);
+        }
+      },
+    }),
     signup: builder.mutation({
       query: (userData) => ({
         url: "/sign-up",
@@ -55,7 +84,7 @@ export const authApi = createApi({
 
     forgotPassword: builder.mutation({
       query: (data) => ({
-        url: "/forgot-password",
+        url: "/forgo-password",
         method: "POST",
         body: data,
       }),
@@ -96,10 +125,10 @@ export const authApi = createApi({
     }),
 
     refreshToken: builder.mutation({
-      query: (data) => ({
-        url: "/refresh-token",
-        method: "POST",
-        body: data,
+      query: (refreshToken) => ({
+        url: "/refresh",
+        method: "GET",
+        body: { refresh_token: refreshToken },
       }),
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         try {
@@ -145,6 +174,7 @@ export const authApi = createApi({
 
 export const {
   useLoginMutation,
+  useAdminLoginMutation,
   useSignupMutation,
   useForgotPasswordMutation,
   useVerifyEmailMutation,

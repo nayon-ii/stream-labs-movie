@@ -4,6 +4,7 @@ import {
   DropzoneEmptyState,
 } from "@/components/ui/dropzone";
 import { Label } from "@/components/ui/label";
+
 export default function UploadContent({
   label,
   title,
@@ -11,14 +12,19 @@ export default function UploadContent({
   setContent,
   maxSize,
   accept = { "video/*": [] },
+  required = false,
 }) {
   const handleDrop = (file) => {
     console.log(file);
     setContent(file);
   };
+
   return (
     <div>
-      <Label>{label}</Label>
+      <Label>
+        {label}
+        {required && <span className="text-red-500 ml-1">*</span>}
+      </Label>
       <Dropzone
         accept={accept}
         maxSize={1024 * 1024 * maxSize}

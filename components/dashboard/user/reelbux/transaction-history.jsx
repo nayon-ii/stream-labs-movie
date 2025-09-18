@@ -7,8 +7,26 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useGetReelBuxBalanceQuery } from "@/redux/store/api/reelbuxApi";
 
 export default function TransactionHistory() {
+  const { data: reelBuxResponse, isLoading } = useGetReelBuxBalanceQuery();
+  const transactions = reelBuxResponse?.txn_data || [];
+
+  if (isLoading) {
+    return (
+      <div className="my-5 bg-secondary py-5 md:py-10 px-5 rounded-md">
+        <h3 className="text-2xl font-medium">Transaction History</h3>
+        <p className="text-secondary-foreground">Loading transactions...</p>
+        <div className="mt-5 space-y-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-muted animate-pulse rounded h-12"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="my-5 bg-secondary py-5 md:py-10 px-5 rounded-md">
       <h3 className="text-2xl font-medium">Transaction History</h3>
@@ -21,36 +39,42 @@ export default function TransactionHistory() {
         <TableHeader>
           <TableRow>
             <TableHead>Source</TableHead>
+            <TableHead>Type</TableHead>
             <TableHead>Amount</TableHead>
             <TableHead>Date</TableHead>
             <TableHead>Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          <TableRow>
-            <TableCell>Paypal</TableCell>
-            <TableCell className="text-green-500">+200.00</TableCell>
-            <TableCell>25 January 2025</TableCell>
-            <TableCell>
-              <Badge variant="success">Completed</Badge>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>Card</TableCell>
-            <TableCell className="text-destructive">145.14</TableCell>
-            <TableCell>17 June 2025</TableCell>
-            <TableCell>
-              <Badge variant="destructive">Failed</Badge>
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell>Distro</TableCell>
-            <TableCell className="text-green-500">+94.20</TableCell>
-            <TableCell>11 March 2025</TableCell>
-            <TableCell>
-              <Badge variant="success">Completed</Badge>
-            </TableCell>
-          </TableRow>
+          {transactions.length > 0 ? (
+            transactions.map((transaction, index) => (
+              <TableRow key={index}>
+                <TableCell>{transaction.source}</TableCell>
+                <TableCell>{transaction.tx_type}</TableCell>
+                <TableCell className={
+                  transaction.status === "Completed" ? "text-green-500" : 
+                  transaction.status === "Failed" ? "text-destructive" : ""
+                }>
+                  {transaction.status === "Failed" ? "-" : "+"}${transaction.amount}
+                </TableCell>
+                <TableCell>{transaction.date}</TableCell>
+                <TableCell>
+                  <Badge variant={
+                    transaction.status === "Completed" ? "success" : 
+                    transaction.status === "Failed" ? "destructive" : "warning"
+                  }>
+                    {transaction.status}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={5} className="text-center text-muted-foreground">
+                No transactions found
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
     </div>

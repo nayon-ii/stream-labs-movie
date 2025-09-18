@@ -7,13 +7,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "@/redux/store/slices/authSlice";
-import { useLoginMutation } from "@/redux/store/api/authApi";
+import { useLoginMutation, useAdminLoginMutation } from "@/redux/store/api/authApi";
 import { toast } from "sonner";
 
 export default function SignInForm() {
   const router = useRouter();
   const dispatch = useDispatch();
   const [login, { isLoading }] = useLoginMutation();
+  const [adminLogin, { isLoading: isAdminLoading }] = useAdminLoginMutation();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -32,21 +33,29 @@ export default function SignInForm() {
     }
 
     try {
-      // Call the login API
-      const response = await login({
-        email_address: email,
-        password,
-      }).unwrap();
+      // Determine if this is an admin login attempt
+      const isAdminEmail = email.includes("admin") || email === "admin@gmail.com";
+      
+      // Call the appropriate login API
+      const response = isAdminEmail 
+        ? await adminLogin({
+            email_address: email,
+            password,
+          }).unwrap()
+        : await login({
+            email_address: email,
+            password,
+          }).unwrap();
 
       console.log("Login response:", response);
       // Dispatch credentials to Redux store
-      dispatch(setCredentials(response));
+      dispatch(setCredentials({ ...response, role: isAdminEmail ? "admin" : response.role || "user" }));
 
       toast.success(
-        `Successfully signed in! Welcome ${response?.full_name} 🎉🎞️.`
+        `Successfully signed in! Welcome ${response?.full_name || "User"} 🎉🎞️.`
       );
       // Redirect based on role
-      if (response.role === "admin") {
+      if (isAdminEmail || response.role === "admin") {
         router.push("/admin/dashboard");
       } else {
         router.push("/watch");
@@ -73,7 +82,7 @@ export default function SignInForm() {
         label="Email"
         value={email}
         setValue={setEmail}
-        disabled={isLoading}
+        disabled={isLoading || isAdminLoading}
       />
 
       {/* Password */}
@@ -83,7 +92,7 @@ export default function SignInForm() {
         label="Password"
         value={password}
         setValue={setPassword}
-        disabled={isLoading}
+        disabled={isLoading || isAdminLoading}
       />
 
       <div className="flex items-center justify-between">
@@ -94,7 +103,7 @@ export default function SignInForm() {
             id="keepMeSignedIn"
             checked={keepMeSignedIn}
             onChange={(e) => setKeepMeSignedIn(e.target.checked)}
-            disabled={isLoading}
+            disabled={isLoading || isAdminLoading}
             className="w-4 h-4 text-primary bg-gray-100 border-gray-300 rounded focus:ring-primary focus:ring-2 disabled:opacity-50"
           />
           <label
@@ -118,8 +127,8 @@ export default function SignInForm() {
       {error && <p className="text-red-500 text-sm">{error}</p>}
 
       {/* Sign in button */}
-      <Button className="w-full" disabled={isLoading}>
-        {isLoading ? "Signing In..." : "Sign In"}
+      <Button className="w-full" disabled={isLoading || isAdminLoading}>
+        {(isLoading || isAdminLoading) ? "Signing In..." : "Sign In"}
       </Button>
 
       {/* If Not an existing user */}

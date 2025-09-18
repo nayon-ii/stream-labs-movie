@@ -13,28 +13,33 @@ import {
 import { Button } from "@/components/ui/button";
 import { Delete02Icon } from "@hugeicons/core-free-icons/index";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useDeleteUserMutation } from "@/redux/store/api/adminApi";
+import { toast } from "sonner";
 import { useState } from "react";
+
 export default function UserDeleteAlert({ user = {} }) {
-  // TODO:
-  const {} = user;
+  const { id, name } = user;
 
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [deleteUser] = useDeleteUserMutation();
 
   const handleDelete = async () => {
     try {
       setLoading(true);
-
-      // if (!res.ok) {
-      //   throw new Error("Failed to delete user");
-      // }
+      await deleteUser(id).unwrap();
+      toast.success("User deleted successfully");
+      setOpen(false);
     } catch (err) {
       console.error(err);
+      toast.error(err?.data?.message || "Failed to delete user");
     } finally {
       setLoading(false);
     }
   };
+
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger>
         <Button
           variant="ghost"
@@ -52,18 +57,18 @@ export default function UserDeleteAlert({ user = {} }) {
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete{" "}
-            <span className="font-black text-primary">{`This User`}</span>{" "}
+            <span className="font-black text-primary">{name || "This User"}</span>{" "}
             account and remove data from your database.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             onClick={handleDelete}
             disabled={loading}
           >
-            Delete
+            {loading ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

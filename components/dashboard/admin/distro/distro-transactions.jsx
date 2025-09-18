@@ -14,8 +14,30 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { distroTransactions } from "@/constants";
+import { useGetAdminDistroReportQuery } from "@/redux/store/api/adminApi";
+
 export default function DistroTransactions() {
+  const { data: distroResponse, isLoading } = useGetAdminDistroReportQuery();
+  const userWiseData = distroResponse?.user_wise || [];
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Transactions</CardTitle>
+          <CardDescription>Loading transactions...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="bg-muted animate-pulse rounded h-12"></div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -36,37 +58,48 @@ export default function DistroTransactions() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {distroTransactions.map((transaction, i) => (
-              <TableRow key={i}>
-                <TableCell>{transaction.user}</TableCell>
-                <TableCell
-                  className={
-                    transaction.status === "failed"
-                      ? "text-destructive"
-                      : transaction.status === "pending"
-                      ? "text-yellow-500"
-                      : "text-green-500"
-                  }
-                >
-                  {transaction.status === "failed" ? "" : "+"}$
-                  {transaction.total_earning}
-                </TableCell>
-                <TableCell>{transaction.total_clicks}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      transaction.status === "failed"
-                        ? "destructive"
-                        : transaction.status === "pending"
-                        ? "warning"
-                        : "success"
+            {userWiseData.length > 0 ? (
+              userWiseData.map((user, i) => (
+                <TableRow key={i}>
+                  <TableCell>{user.full_name}</TableCell>
+                  <TableCell
+                    className={
+                      user.status === "failed"
+                        ? "text-destructive"
+                        : user.status === "pending"
+                        ? "text-yellow-500"
+                        : "text-green-500"
                     }
                   >
-                    {transaction.status}
-                  </Badge>
+                    {user.status === "failed" ? "" : "+"}$
+                    {user.total_earning}
+                  </TableCell>
+                  <TableCell>{user.total_clicks}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant={
+                        user.status === "failed"
+                          ? "destructive"
+                          : user.status === "pending"
+                          ? "warning"
+                          : "success"
+                      }
+                    >
+                      {user.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={4}
+                  className="text-center text-muted-foreground"
+                >
+                  No transactions found
                 </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </CardContent>

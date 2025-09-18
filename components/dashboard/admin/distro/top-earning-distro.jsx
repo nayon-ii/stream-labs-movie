@@ -5,51 +5,54 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useGetAdminDistroReportQuery } from "@/redux/store/api/adminApi";
 
 export default function TopEarningDistro() {
+  const { data: distroResponse, isLoading } = useGetAdminDistroReportQuery();
+  const topUsers = distroResponse?.top_3_monthly_users || [];
+
+  if (isLoading) {
+    return (
+      <Card className="my-5">
+        <CardHeader>
+          <CardTitle>Top Earning Distro</CardTitle>
+          <CardDescription>Loading top earners...</CardDescription>
+        </CardHeader>
+        <CardContent className="grid lg:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3 lg:gap-5">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="bg-muted animate-pulse rounded-md h-16"></div>
+          ))}
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="my-5">
       <CardHeader>
         <CardTitle>Top Earning Distro</CardTitle>
-        <CardDescription>Hight earning Distro this month</CardDescription>
+        <CardDescription>High earning Distro this month</CardDescription>
       </CardHeader>
       <CardContent className="grid lg:grid-cols-2 xl:grid-cols-3 gap-2 md:gap-3 lg:gap-5">
-        {/* 1 */}
-        <div className="flex justify-between items-center px-5 py-3 border border-white/25  rounded-md">
-          <p className="flex gap-3 items-center">
-            <span className="w-7 md:w-10 aspect-square bg-secondary-foreground text-card text-lg md:text-2xl grid place-items-center rounded-full font-bold">
-              1
-            </span>
-            <span className="text-lg md:text-xl font-medium">John Doe</span>
-          </p>
-          <p className="text-base md:text-lg font-medium text-secondary-foreground">
-            $1252.26
-          </p>
-        </div>
-        {/* 2 */}
-        <div className="flex justify-between items-center px-5 py-3 border border-white/25  rounded-md">
-          <p className="flex gap-3 items-center">
-            <span className="w-7 md:w-10 aspect-square bg-secondary-foreground text-card text-lg md:text-2xl grid place-items-center rounded-full font-bold">
-              2
-            </span>
-            <span className="text-lg md:text-xl font-medium">John Doe</span>
-          </p>
-          <p className="text-base md:text-lg font-medium text-secondary-foreground">
-            $1252.26
-          </p>
-        </div>
-        {/* 3 */}
-        <div className="flex justify-between items-center px-5 py-3 border border-white/25  rounded-md">
-          <p className="flex gap-3 items-center">
-            <span className="w-7 md:w-10 aspect-square bg-secondary-foreground text-card text-lg md:text-2xl grid place-items-center rounded-full font-bold">
-              3
-            </span>
-            <span className="text-lg md:text-xl font-medium">John Doe</span>
-          </p>
-          <p className="text-base md:text-lg font-medium text-secondary-foreground">
-            $1252.26
-          </p>
-        </div>
+        {topUsers.length > 0 ? (
+          topUsers.map((user, index) => (
+            <div key={user.user_id} className="flex justify-between items-center px-5 py-3 border border-white/25 rounded-md">
+              <p className="flex gap-3 items-center">
+                <span className="w-7 md:w-10 aspect-square bg-secondary-foreground text-card text-lg md:text-2xl grid place-items-center rounded-full font-bold">
+                  {index + 1}
+                </span>
+                <span className="text-lg md:text-xl font-medium">{user.full_name}</span>
+              </p>
+              <p className="text-base md:text-lg font-medium text-secondary-foreground">
+                ${user.monthly_earning}
+              </p>
+            </div>
+          ))
+        ) : (
+          <div className="col-span-full text-center py-5">
+            <p className="text-muted-foreground">No top earners this month</p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

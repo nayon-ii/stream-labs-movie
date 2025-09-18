@@ -13,25 +13,32 @@ import {
 import { Button } from "@/components/ui/button";
 import { Delete02Icon } from "@hugeicons/core-free-icons/index";
 import { HugeiconsIcon } from "@hugeicons/react";
+import { useDeleteSubscriberMutation } from "@/redux/store/api/adminApi";
+import { toast } from "sonner";
 import { useState } from "react";
+
 export default function SubscriberDeleteAlert({ subscriber = {} }) {
-  const {} = subscriber;
+  const { user_id, full_name } = subscriber;
   const [loading, setLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [deleteSubscriber] = useDeleteSubscriberMutation();
+
   const handleDelete = async () => {
     try {
       setLoading(true);
-
-      // if (!res.ok) {
-      //   throw new Error("Failed to delete user");
-      // }
+      await deleteSubscriber(user_id).unwrap();
+      toast.success("Subscriber deleted successfully");
+      setOpen(false);
     } catch (err) {
       console.error(err);
+      toast.error(err?.data?.message || "Failed to delete subscriber");
     } finally {
       setLoading(false);
     }
   };
+
   return (
-    <AlertDialog>
+    <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger>
         <Button
           variant="ghost"
@@ -49,18 +56,18 @@ export default function SubscriberDeleteAlert({ subscriber = {} }) {
           <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently remove{" "}
-            <span className="font-black text-primary">{`This User`}</span>{" "}
+            <span className="font-black text-primary">{full_name || "This User"}</span>{" "}
             subscription and remove data from your database.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             variant="destructive"
             onClick={handleDelete}
             disabled={loading}
           >
-            Delete
+            {loading ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

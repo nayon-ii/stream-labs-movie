@@ -7,8 +7,26 @@ import {
 } from "@hugeicons/core-free-icons/index";
 import { HugeiconsIcon } from "@hugeicons/react";
 import PaymentDialog from "../../payment-dialog";
+import { useGetDistroBalanceQuery } from "@/redux/store/api/distroApi";
 
 export default function DistroStats() {
+  const { data: distroResponse, isLoading } = useGetDistroBalanceQuery();
+  const {
+    total_earning = 0,
+    total_clicks = 0,
+    distro_balance = 0,
+  } = distroResponse || {};
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 lg:gap-5 my-5">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="bg-secondary animate-pulse rounded-md h-32"></div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 lg:gap-5 my-5">
       {/* Total Earning */}
@@ -18,7 +36,7 @@ export default function DistroStats() {
           <HugeiconsIcon icon={Dollar02Icon} />
         </h4>
         <h2 className="text-3xl md:text-4xl font-black text-green-500">
-          $25.50
+          ${total_earning.toFixed(2)}
         </h2>
       </div>
       {/* Total Clicks */}
@@ -27,7 +45,7 @@ export default function DistroStats() {
           Total Clicks
           <HugeiconsIcon icon={MouseLeftClick06Icon} />
         </h4>
-        <h2 className="text-3xl md:text-4xl font-black">48</h2>
+        <h2 className="text-3xl md:text-4xl font-black">{total_clicks}</h2>
       </div>
       {/* Distro balance */}
       <div className="col-span-2 bg-secondary px-3 md:px-5 py-5 md:py-10 rounded-md space-y-1 md:space-y-3">
@@ -36,7 +54,7 @@ export default function DistroStats() {
           <HugeiconsIcon icon={CreditCardIcon} />
         </h4>
         <h2 className="text-3xl md:text-4xl font-black text-green-500">
-          $25.50
+          ${distro_balance.toFixed(2)}
         </h2>
         {/* Buttons */}
         <div className="grid grid-cols-2 gap-2 md:gap-3 lg:gap-5">
